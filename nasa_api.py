@@ -102,7 +102,7 @@ def photo_week(date='2021-12-08'):
 
 
 def main():
-    date = '2019-10-19'
+    date = '2019-10-18'
     photo_loader(date)
 
 
