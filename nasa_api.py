@@ -10,6 +10,13 @@ import nasapy
 
 def photo_loader(date):
 
+    # вычисляем начало и конец недели
+    date_d = datetime.datetime.strptime(date, "%Y-%m-%d")
+    week_begin = date_d - datetime.timedelta(days=(date_d.weekday()))  # начало недели
+    week_end = week_begin + datetime.timedelta(days=6)  # конец недели
+
+    directories = directory_creator(week_begin)
+
     api_key = 'DTd6KuX8SMBa3GvzyaRBoZZHjGc785xutfeBwE64'
 
     # запрос
@@ -37,19 +44,17 @@ def photo_loader(date):
 
         # создаем json файлы для каждой камеры и записываем список фотографий
         for key in photo:
-            file_name = key + '-' + date + '.json'
-            with open(file_name, 'w') as file:
+            file_name = key + '-' + date
+            file_path = os.path.join(
+                directories[0], '%s.%s' % (file_name, 'json')
+            )
+            with open(file_path, 'w') as file:
                 file.write(json.dumps(photo[key]))
 
-        photo_week(date)
+        photo_week(week_begin, week_end, directories[1], directories[0])
 
 
-def photo_week(date):
-    # вычисляем начало и конец недели
-    date = datetime.datetime.strptime(date, "%Y-%m-%d")
-    week_begin = date - datetime.timedelta(days=(date.weekday()))  # начало недели
-    week_end = week_begin + datetime.timedelta(days=6)  # конец
-
+def photo_week(week_begin, week_end, directory, dataset):
     # формируем список дат по дням недели
     dates = []
     delta_time = week_end - week_begin
@@ -57,7 +62,7 @@ def photo_week(date):
         dates.append(str((week_begin + datetime.timedelta(i)).date()))
 
     # выбираем файлы с данными, которые соответсвуют текущей неделе
-    files = os.listdir()
+    files = os.listdir(dataset)
 
     needed_files = []
     for file_name in files:
@@ -68,7 +73,7 @@ def photo_week(date):
     # формируем словарь: масросоход-{камера-список количества сделанных фото}
     stat_ = {}
     for file_1 in needed_files:
-        with open(file_1) as f:
+        with open(os.path.join(dataset + '\\' + file_1)) as f:
             file_contents = json.load(f)
 
         rover_name = file_1[:file_1.index('.')]
@@ -93,10 +98,25 @@ def photo_week(date):
                                  min_photos_amount=min(camera_stats[key]), max_photos_amount=max(camera_stats[key]),
                                  total_photos_amount=sum(camera_stats[key])))
 
-        file_name = rover + '-' + date_for_name + '.json'
-        # print(file_name)
-        with open(file_name, 'w') as file:
+        file_name = rover + '-' + date_for_name
+        file_path = os.path.join(
+            directory, '%s.%s' % (file_name, 'json')
+        )
+        with open(file_path, 'w') as file:
             file.write(json.dumps(to_write))
+
+
+# функция для создания папок хранения данных
+def directory_creator(date_begin):
+    data_dir = 'data-' + str(date_begin.date())
+    stat_dir = 'statistic-' + str(date_begin.date())
+    direcroties = [data_dir, stat_dir]
+    try:
+        os.mkdir(data_dir)
+        os.mkdir(stat_dir)
+    except FileExistsError:
+        pass
+    return direcroties
 
 
 def create_parser():
