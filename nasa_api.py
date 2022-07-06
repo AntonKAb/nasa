@@ -116,6 +116,7 @@ def directory_creator(date_begin):
         os.mkdir(stat_dir)
     except FileExistsError:
         pass
+
     return direcroties
 
 
