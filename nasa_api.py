@@ -1,15 +1,14 @@
 # в скрипте будет использоваться специальная библиотека nasapy для работы с данными предоставляемыми NASA
-import nasapy
 import datetime
 import json
 import os
 import statistics
+import sys
+import argparse
+import nasapy
 
 
-def photo_loader(date=None):
-
-    if date is None:
-        date = str(datetime.datetime.today())[:10]
+def photo_loader(date):
 
     api_key = 'DTd6KuX8SMBa3GvzyaRBoZZHjGc785xutfeBwE64'
 
@@ -45,7 +44,7 @@ def photo_loader(date=None):
         photo_week(date)
 
 
-def photo_week(date='2021-12-08'):
+def photo_week(date):
     # вычисляем начало и конец недели
     date = datetime.datetime.strptime(date, "%Y-%m-%d")
     week_begin = date - datetime.timedelta(days=(date.weekday()))  # начало недели
@@ -55,8 +54,7 @@ def photo_week(date='2021-12-08'):
     dates = []
     delta_time = week_end - week_begin
     for i in range(delta_time.days + 1):
-        dates.append(str(week_begin + datetime.timedelta(i))[:10])
-
+        dates.append(str((week_begin + datetime.timedelta(i)).date()))
 
     # выбираем файлы с данными, которые соответсвуют текущей неделе
     files = os.listdir()
@@ -85,7 +83,7 @@ def photo_week(date='2021-12-08'):
             stat_[rover_name][camera_name].append(photos_per_camera)
 
     # находим статисику по камерам и записываем в json
-    date_for_name = str(week_begin)[:10]
+    date_for_name = str(week_begin.date())
     for rover in stat_:
         camera_stats = stat_[rover]
         to_write = []
@@ -101,10 +99,14 @@ def photo_week(date='2021-12-08'):
             file.write(json.dumps(to_write))
 
 
-def main():
-    date = '2019-10-19'
-    photo_loader(date)
+def create_parser():
+    date_default = str(datetime.datetime.today().date())
+    parser = argparse.ArgumentParser()
+    parser.add_argument('date', nargs='?', default=date_default)
+    return parser
 
 
 if __name__ == '__main__':
-    main()
+    parser = create_parser()
+    date_arg = parser.parse_args(sys.argv[1:])
+    photo_loader(date_arg.date)
