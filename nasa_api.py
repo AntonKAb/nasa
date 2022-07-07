@@ -25,7 +25,7 @@ def photo_loader(date):
 
     # проверка наличия фотографий на дату
     if len(request) == 0:
-        massage = "No photo is avaliable."
+        massage = "No photo avaliable."
         print(massage)
     else:
         # формируем словарь, где ключ - камера ровера, значение - список фото
@@ -87,7 +87,6 @@ def photo_week(week_begin, week_end, directory, dataset):
                 stat_[rover_name][camera_name].append(photos_per_camera)
             else:
                 stat_[rover_name][camera_name] = [photos_per_camera]
-
 
 
     # находим статисику по камерам и записываем в json
