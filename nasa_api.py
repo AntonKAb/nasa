@@ -6,6 +6,7 @@ import statistics
 import sys
 import argparse
 import nasapy
+import pathlib
 
 
 def photo_loader(date):
@@ -67,12 +68,15 @@ def photo_week(week_begin, week_end, directory, dataset):
     for file_name in files:
         for date in dates:
             if ('-' + date) in file_name and file_name.count('.') == 2:
-                needed_files.append(file_name)
+                needed_files.append(file_name.replace('.json', ''))
 
     # формируем словарь: масросоход-{камера-список количества сделанных фото}
     stat_ = {}
     for file_1 in needed_files:
-        with open(os.path.join(dataset + '\\' + file_1)) as f:
+        file_path = os.path.join(
+            dataset, '%s.%s' % (file_1, 'json')
+        )
+        with open(file_path) as f:
             file_contents = json.load(f)
 
         rover_name = file_1[:file_1.index('.')]
