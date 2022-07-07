@@ -79,13 +79,19 @@ def photo_week(week_begin, week_end, directory, dataset):
         rover_name = file_1[:file_1.index('.')]
         camera_name = file_1[file_1.index('.')+1:file_1.index('-')]
         photos_per_camera = len(file_contents)
+        print(photos_per_camera)
 
         if rover_name not in stat_.keys():
             stat_[rover_name] = {}
-        if rover_name in stat_.keys() and camera_name not in stat_[rover_name].keys():
-            stat_[rover_name][camera_name] = [photos_per_camera]
-        if rover_name in stat_.keys() and camera_name in stat_[rover_name].keys():
-            stat_[rover_name][camera_name].append(photos_per_camera)
+
+        if rover_name in stat_.keys():
+            if camera_name in stat_[rover_name].keys():
+                stat_[rover_name][camera_name].append(photos_per_camera)
+            else:
+                stat_[rover_name][camera_name] = [photos_per_camera]
+
+    print(stat_)
+
 
     # находим статисику по камерам и записываем в json
     date_for_name = str(week_begin.date())
@@ -98,6 +104,7 @@ def photo_week(week_begin, week_end, directory, dataset):
                                  min_photos_amount=min(camera_stats[key]), max_photos_amount=max(camera_stats[key]),
                                  total_photos_amount=sum(camera_stats[key])))
 
+        print(to_write)
         file_name = rover + '-' + date_for_name
         file_path = os.path.join(
             directory, '%s.%s' % (file_name, 'json')
