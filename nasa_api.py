@@ -7,6 +7,7 @@ import statistics
 import sys
 import argparse
 import nasapy
+import pathlib
 
 
 def photo_loader(date):
@@ -48,7 +49,7 @@ def photo_loader(date):
         for key in photo:
 
             file_name = key + '-' + date
-            file_path = os.path.normpath(f'{data_dir}/{file_name}.json')
+            file_path = pathlib.Path(data_dir, file_name + '.json')
             with open(file_path, 'w') as file:
                 file.write(json.dumps(photo[key]))
 
@@ -70,7 +71,7 @@ def photo_week(week_begin, week_end, stat_dir, data_dir):
     stat_ = {}
     for file_1 in needed_files:
 
-        file_path = os.path.normpath(f'{data_dir}/{file_1}')
+        file_path = pathlib.Path(data_dir, file_1)
         with open(file_path) as f:
             file_contents = json.load(f)
 
@@ -105,7 +106,8 @@ def photo_week(week_begin, week_end, stat_dir, data_dir):
             ))
 
         file_name = rover + '-' + date_for_name
-        file_path = os.path.normpath(f'{stat_dir}/{file_name}.json')
+        #file_path = os.path.normpath(f'{stat_dir}/{file_name}.json')
+        file_path = pathlib.Path(stat_dir, file_name + '.json')
 
         with open(file_path, 'w') as file:
             file.write(json.dumps(to_write))
