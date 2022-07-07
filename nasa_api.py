@@ -25,9 +25,8 @@ def photo_loader(date):
 
     # проверка наличия фотографий на дату
     if len(request) == 0:
-        massage = "No photo avaliable."
+        massage = "No photo is avaliable."
         print(massage)
-        return massage
     else:
         # формируем словарь, где ключ - камера ровера, значение - список фото
         photo = {}
@@ -79,7 +78,6 @@ def photo_week(week_begin, week_end, directory, dataset):
         rover_name = file_1[:file_1.index('.')]
         camera_name = file_1[file_1.index('.')+1:file_1.index('-')]
         photos_per_camera = len(file_contents)
-        print(photos_per_camera)
 
         if rover_name not in stat_.keys():
             stat_[rover_name] = {}
@@ -90,7 +88,6 @@ def photo_week(week_begin, week_end, directory, dataset):
             else:
                 stat_[rover_name][camera_name] = [photos_per_camera]
 
-    print(stat_)
 
 
     # находим статисику по камерам и записываем в json
@@ -104,7 +101,6 @@ def photo_week(week_begin, week_end, directory, dataset):
                                  min_photos_amount=min(camera_stats[key]), max_photos_amount=max(camera_stats[key]),
                                  total_photos_amount=sum(camera_stats[key])))
 
-        print(to_write)
         file_name = rover + '-' + date_for_name
         file_path = os.path.join(
             directory, '%s.%s' % (file_name, 'json')
