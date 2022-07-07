@@ -1,4 +1,5 @@
-# в скрипте будет использоваться специальная библиотека nasapy для работы с данными предоставляемыми NASA
+# в скрипте будет использоваться специальная библиотека nasapy
+# для работы с данными предоставляемыми NASA
 import datetime
 import json
 import os
@@ -6,17 +7,18 @@ import statistics
 import sys
 import argparse
 import nasapy
-import pathlib
 
 
 def photo_loader(date):
 
-    # вычисляем начало и конец недели
+    # вычисляем начало и конец недели: week_begin и week_end
     date_d = datetime.datetime.strptime(date, "%Y-%m-%d")
-    week_begin = date_d - datetime.timedelta(days=(date_d.weekday()))  # начало недели
-    week_end = week_begin + datetime.timedelta(days=6)  # конец недели
+    week_begin = date_d - datetime.timedelta(days=(date_d.weekday()))
+    week_end = week_begin + datetime.timedelta(days=6)
 
     directories = directory_creator(week_begin)
+    data_dir = directories[0]   # дирректория для хранения данных по дням
+    stat_dir = directories[1]   # дирректория для хранения статистики
 
     api_key = 'DTd6KuX8SMBa3GvzyaRBoZZHjGc785xutfeBwE64'
 
@@ -26,7 +28,7 @@ def photo_loader(date):
 
     # проверка наличия фотографий на дату
     if len(request) == 0:
-        massage = "No photo avaliable."
+        massage = "No photo is avaliable."
         print(massage)
     else:
         # формируем словарь, где ключ - камера ровера, значение - список фото
@@ -44,38 +46,31 @@ def photo_loader(date):
 
         # создаем json файлы для каждой камеры и записываем список фотографий
         for key in photo:
+
             file_name = key + '-' + date
-            file_path = os.path.join(
-                directories[0], '%s.%s' % (file_name, 'json')
-            )
+            file_path = os.path.normpath(f'{data_dir}/{file_name}.json')
             with open(file_path, 'w') as file:
                 file.write(json.dumps(photo[key]))
 
-        photo_week(week_begin, week_end, directories[1], directories[0])
+        photo_week(week_begin, week_end, stat_dir, data_dir)
 
 
-def photo_week(week_begin, week_end, directory, dataset):
+def photo_week(week_begin, week_end, stat_dir, data_dir):
     # формируем список дат по дням недели
     dates = []
     delta_time = week_end - week_begin
     for i in range(delta_time.days + 1):
-        dates.append(str((week_begin + datetime.timedelta(i)).date()))
+        weekday = str((week_begin + datetime.timedelta(i)).date())
+        dates.append(weekday)
 
     # выбираем файлы с данными, которые соответсвуют текущей неделе
-    files = os.listdir(dataset)
+    needed_files = os.listdir(data_dir)
 
-    needed_files = []
-    for file_name in files:
-        for date in dates:
-            if ('-' + date) in file_name and file_name.count('.') == 2:
-                needed_files.append(file_name.replace('.json', ''))
-
-    # формируем словарь: масросоход-{камера-список количества сделанных фото}
+    # формируем словарь:{масросоход:{камера:[список количества фото]}}
     stat_ = {}
     for file_1 in needed_files:
-        file_path = os.path.join(
-            dataset, '%s.%s' % (file_1, 'json')
-        )
+
+        file_path = os.path.normpath(f'{data_dir}/{file_1}')
         with open(file_path) as f:
             file_contents = json.load(f)
 
@@ -92,45 +87,49 @@ def photo_week(week_begin, week_end, directory, dataset):
             else:
                 stat_[rover_name][camera_name] = [photos_per_camera]
 
-
     # находим статисику по камерам и записываем в json
     date_for_name = str(week_begin.date())
+
     for rover in stat_:
         camera_stats = stat_[rover]
         to_write = []
-        # print(camera_stats)
+
         for key in camera_stats:
-            to_write.append(dict(camera_name=key.upper(), avg_photos_amount=statistics.mean(camera_stats[key]),
-                                 min_photos_amount=min(camera_stats[key]), max_photos_amount=max(camera_stats[key]),
-                                 total_photos_amount=sum(camera_stats[key])))
+            stat_list = camera_stats[key]
+            to_write.append(dict(
+                camera_name=key.upper(),
+                avg_photos_amount=statistics.mean(stat_list),
+                min_photos_amount=min(stat_list),
+                max_photos_amount=max(stat_list),
+                total_photos_amount=sum(stat_list)
+            ))
 
         file_name = rover + '-' + date_for_name
-        file_path = os.path.join(
-            directory, '%s.%s' % (file_name, 'json')
-        )
+        file_path = os.path.normpath(f'{stat_dir}/{file_name}.json')
+
         with open(file_path, 'w') as file:
             file.write(json.dumps(to_write))
 
 
 # функция для создания папок хранения данных
 def directory_creator(date_begin):
-    data_dir = 'data-' + str(date_begin.date())
-    stat_dir = 'statistic-' + str(date_begin.date())
-    direcroties = [data_dir, stat_dir]
+    week = str(date_begin.date())
+    data_dir = 'data-' + week
+    stat_dir = 'statistic-' + week
+    direcrories = [data_dir, stat_dir]
     try:
         os.mkdir(data_dir)
         os.mkdir(stat_dir)
     except FileExistsError:
         pass
-
-    return direcroties
+    return direcrories
 
 
 def create_parser():
     date_default = str(datetime.datetime.today().date())
-    parser = argparse.ArgumentParser()
-    parser.add_argument('date', nargs='?', default=date_default)
-    return parser
+    input_parser = argparse.ArgumentParser()
+    input_parser.add_argument('date', nargs='?', default=date_default)
+    return input_parser
 
 
 if __name__ == '__main__':
