@@ -21,10 +21,10 @@ def photo_loader(date):
     data_dir = directories[0]   # дирректория для хранения данных по дням
     stat_dir = directories[1]   # дирректория для хранения статистики
 
-    api_key = 'DTd6KuX8SMBa3GvzyaRBoZZHjGc785xutfeBwE64'
+    API_KEY = 'DTd6KuX8SMBa3GvzyaRBoZZHjGc785xutfeBwE64'
 
     # запрос
-    nasa_req = nasapy.Nasa(key=api_key)
+    nasa_req = nasapy.Nasa(key=API_KEY)
     request = nasa_req.mars_rover(earth_date=date)
 
     # проверка наличия фотографий на дату
@@ -53,10 +53,12 @@ def photo_loader(date):
             with open(file_path, 'w') as file:
                 file.write(json.dumps(photo[key]))
 
-        photo_week(week_begin, week_end, stat_dir, data_dir)
+        photo_week(week_begin, week_end,
+                   stat_dir, data_dir)
 
 
 def photo_week(week_begin, week_end, stat_dir, data_dir):
+
     # формируем список дат по дням недели
     dates = []
     delta_time = week_end - week_begin
@@ -81,7 +83,6 @@ def photo_week(week_begin, week_end, stat_dir, data_dir):
 
         if rover_name not in stat_.keys():
             stat_[rover_name] = {}
-
         if rover_name in stat_.keys():
             if camera_name in stat_[rover_name].keys():
                 stat_[rover_name][camera_name].append(photos_per_camera)
@@ -106,7 +107,7 @@ def photo_week(week_begin, week_end, stat_dir, data_dir):
             ))
 
         file_name = rover + '-' + date_for_name
-        #file_path = os.path.normpath(f'{stat_dir}/{file_name}.json')
+        # file_path = os.path.normpath(f'{stat_dir}/{file_name}.json')
         file_path = pathlib.Path(stat_dir, file_name + '.json')
 
         with open(file_path, 'w') as file:
